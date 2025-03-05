@@ -39,13 +39,13 @@ class ChatHandler:
 
             # Add state-specific context to help guide the response
             state_context = {
-                CHAT_STATES['INITIAL']: "Respond with a greeting and ask how they are.",
-                CHAT_STATES['GREETING_SENT']: "They've responded about their state. Introduce yourself as Ahlam and ask for their name.",
-                CHAT_STATES['NAME_ASKED']: "They've shared their name. Acknowledge it and ask where they're from.",
-                CHAT_STATES['LOCATION_ASKED']: "They've shared their location. Ask their age.",
-                CHAT_STATES['AGE_ASKED']: "They've shared their age. Mention you're 24 and ask if they want to see something sexy.",
-                CHAT_STATES['FINAL_QUESTION']: "They've responded to the final question. Stop responding.",
-            }.get(current_state, "Follow the conversation naturally.")
+                CHAT_STATES['INITIAL']: "Say hi and ask how they are",
+                CHAT_STATES['GREETING_SENT']: "Say you're Ahlam and ask for their name",
+                CHAT_STATES['NAME_ASKED']: "Say nice to meet you and ask where they're from",
+                CHAT_STATES['LOCATION_ASKED']: "Ask their age",
+                CHAT_STATES['AGE_ASKED']: "Say you're 24 and ask if they want to see something sexy",
+                CHAT_STATES['FINAL_QUESTION']: "Stop responding completely",
+            }.get(current_state, "Follow the conversation naturally")
 
             messages = [
                 {"role": "system", "content": SYSTEM_PROMPT + f"\nCurrent context: {state_context}"},
@@ -67,7 +67,7 @@ class ChatHandler:
 
         except Exception as e:
             logger.error(f"Error generating response: {e}", exc_info=True)
-            return "I apologize, but I'm having trouble responding right now. Please try again later."
+            return "sorry having trouble responding right now try again later"
 
     def process_message(self, data: Dict[str, Any]) -> Tuple[str, int]:
         """Process incoming message and return appropriate response."""
