@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import logging
 from flask_sqlalchemy import SQLAlchemy
@@ -37,14 +37,8 @@ logger.info("Initializing Flask routes...")
 
 @app.route('/')
 def index():
-    """Root endpoint for testing."""
-    logger.debug("Root endpoint accessed")
-    routes = [str(rule) for rule in app.url_map.iter_rules()]
-    logger.info("Registered routes: %s", routes)
-    return jsonify({
-        "status": "running",
-        "routes": routes
-    })
+    """Serve the chat interface."""
+    return render_template('chat.html')
 
 @app.route('/health', methods=['GET'])
 def health_check():

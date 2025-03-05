@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with Ahlam</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <style>
+        .chat-container {
+            height: 60vh;
+            overflow-y: auto;
+        }
+        .chat-message {
+            margin: 10px;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .user-message {
+            background-color: var(--bs-primary);
+            margin-left: 20%;
+        }
+        .bot-message {
+            background-color: var(--bs-secondary);
+            margin-right: 20%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">Chat with Ahlam</h2>
+        <div class="chat-container border rounded p-3 mb-3" id="chatMessages">
+            <!-- Messages will be added here -->
+        </div>
+        <div class="input-group mb-3">
+            <input type="text" id="messageInput" class="form-control" placeholder="Type your message...">
+            <button class="btn btn-primary" type="button" id="sendButton">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const userId = 'web_user_' + Math.random().toString(36).substr(2, 9);
+
+        function addMessage(message, isUser) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${isUser ? 'user-message' : 'bot-message'}`;
+            messageDiv.textContent = message;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            addMessage(message, true);
+            messageInput.value = '';
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        senderName: userId,
+                        senderMessage: message
+                    })
+                });
+
+                const data = await response.json();
+                if (data.data && data.data[0].message) {
+                    addMessage(data.data[0].message, false);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('Sorry, there was an error processing your message.', false);
+            }
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
