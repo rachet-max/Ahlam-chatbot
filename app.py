@@ -35,6 +35,17 @@ chat_handler = ChatHandler()
 
 logger.info("Initializing Flask routes...")
 
+@app.route('/')
+def index():
+    """Root endpoint for testing."""
+    logger.debug("Root endpoint accessed")
+    routes = [str(rule) for rule in app.url_map.iter_rules()]
+    logger.info("Registered routes: %s", routes)
+    return jsonify({
+        "status": "running",
+        "routes": routes
+    })
+
 @app.route('/health', methods=['GET'])
 def health_check():
     """Health check endpoint."""

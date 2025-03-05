@@ -2,13 +2,13 @@ import json
 import logging
 from typing import Tuple, Dict, Any
 from datetime import datetime
-import openai
+from openai import OpenAI
 from config import OPENAI_API_KEY, SYSTEM_PROMPT, CHAT_STATES
 from models import ChatSession
 from app import db
 
 logger = logging.getLogger(__name__)
-openai.api_key = OPENAI_API_KEY
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 class ChatHandler:
     @staticmethod
@@ -30,14 +30,14 @@ class ChatHandler:
                 {"role": "assistant", "content": json.dumps(context)},
                 {"role": "user", "content": message}
             ]
-            
-            response = openai.ChatCompletion.create(
+
+            response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=messages,
                 max_tokens=150,
                 temperature=0.7
             )
-            
+
             return response.choices[0].message.content.strip()
         except Exception as e:
             logger.error(f"Error generating response: {e}")
@@ -48,34 +48,34 @@ class ChatHandler:
         try:
             user_id = data.get('senderName', 'unknown_user')
             message = data.get('senderMessage', '').strip()
-            
+
             if not message:
                 return "I couldn't understand your message. Could you please try again?", 400
 
             session = self.get_or_create_session(user_id)
-            
+
             if session.completed:
                 return "", 200
 
             context = json.loads(session.context) if session.context else {}
             response = self.generate_response(message, context)
-            
+
             # Update session state based on conversation flow
             if session.state == CHAT_STATES['FINAL_QUESTION']:
                 session.completed = True
             else:
                 session.state += 1
-            
+
             # Update context with new information
             context['last_message'] = message
             context['last_response'] = response
             session.context = json.dumps(context)
             session.updated_at = datetime.utcnow()
-            
+
             db.session.commit()
-            
+
             return response, 200
-            
+
         except Exception as e:
             logger.error(f"Error processing message: {e}")
             return "An error occurred while processing your message.", 500
