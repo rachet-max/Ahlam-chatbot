@@ -27,10 +27,13 @@ if not os.environ.get("OPENAI_API_KEY"):
 
 db.init_app(app)
 
+# Import dependencies after app initialization
 from chat_handler import ChatHandler
 from utils import format_response, log_request, extract_message
 
 chat_handler = ChatHandler()
+
+logger.info("Initializing Flask routes...")
 
 @app.route('/health', methods=['GET'])
 def health_check():
@@ -76,6 +79,8 @@ def chat():
     except Exception as e:
         logger.error(f"Error in chat endpoint: {e}", exc_info=True)
         return jsonify({"error": "Internal server error"}), 500
+
+logger.info("Flask routes initialized successfully")
 
 # Create database tables
 with app.app_context():
