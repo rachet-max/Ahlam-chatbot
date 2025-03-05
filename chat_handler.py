@@ -32,6 +32,10 @@ class ChatHandler:
             logger.debug(f"Current context: {context}")
             logger.debug(f"Current state: {current_state}")
 
+            # If we're in FINAL_QUESTION state, don't generate any response
+            if current_state == CHAT_STATES['FINAL_QUESTION']:
+                return ""
+
             # Build conversation history from context
             conversation_history = []
             if 'messages' in context:
@@ -43,7 +47,7 @@ class ChatHandler:
                 CHAT_STATES['GREETING_SENT']: "Say doing okay and introduce yourself as Ahlam from Mombasa and ask for their name",
                 CHAT_STATES['NAME_ASKED']: "Say nice to meet you and ask where they're from",
                 CHAT_STATES['LOCATION_ASKED']: "Ask their age",
-                CHAT_STATES['AGE_ASKED']: "Say cool im 24 and ask if they want to see something sexy",
+                CHAT_STATES['AGE_ASKED']: "Say cool im 24 do you want to see something sexy",
                 CHAT_STATES['FINAL_QUESTION']: "Stop responding completely",
             }.get(current_state, "Follow the conversation naturally")
 
