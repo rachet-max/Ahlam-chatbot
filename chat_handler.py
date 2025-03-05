@@ -25,15 +25,32 @@ class ChatHandler:
         return session
 
     @staticmethod
-    def generate_response(message: str, context: Dict[str, Any]) -> str:
+    def generate_response(message: str, context: Dict[str, Any], current_state: int) -> str:
         """Generate response using GPT-3.5."""
         try:
             logger.debug(f"Generating response for message: {message}")
             logger.debug(f"Current context: {context}")
+            logger.debug(f"Current state: {current_state}")
+
+            # Build conversation history from context
+            conversation_history = []
+            if 'messages' in context:
+                conversation_history = context['messages']
+
+            # Add state-specific context to help guide the response
+            state_context = {
+                CHAT_STATES['INITIAL']: "Respond with a greeting and ask how they are.",
+                CHAT_STATES['GREETING_SENT']: "They've responded about their state. Introduce yourself as Ahlam and ask for their name.",
+                CHAT_STATES['NAME_ASKED']: "They've shared their name. Acknowledge it and ask where they're from.",
+                CHAT_STATES['LOCATION_ASKED']: "They've shared their location. Ask their age.",
+                CHAT_STATES['AGE_ASKED']: "They've shared their age. Mention you're 24 and ask if they want to see something sexy.",
+                CHAT_STATES['FINAL_QUESTION']: "They've responded to the final question. Stop responding.",
+            }.get(current_state, "Follow the conversation naturally.")
 
             messages = [
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "assistant", "content": json.dumps(context)},
+                {"role": "system", "content": SYSTEM_PROMPT + f"\nCurrent context: {state_context}"},
+                *[{"role": "assistant" if i % 2 == 0 else "user", "content": msg} 
+                  for i, msg in enumerate(conversation_history)],
                 {"role": "user", "content": message}
             ]
 
@@ -74,7 +91,13 @@ class ChatHandler:
             logger.debug(f"Current session state: {session.state}")
             context = json.loads(session.context) if session.context else {}
 
-            response = self.generate_response(message, context)
+            # Initialize or update message history
+            if 'messages' not in context:
+                context['messages'] = []
+            context['messages'].append(message)
+
+            response = self.generate_response(message, context, session.state)
+            context['messages'].append(response)
 
             # Update session state based on conversation flow
             previous_state = session.state
@@ -86,8 +109,6 @@ class ChatHandler:
             logger.info(f"State transition: {previous_state} -> {session.state}")
 
             # Update context with new information
-            context['last_message'] = message
-            context['last_response'] = response
             session.context = json.dumps(context)
             session.updated_at = datetime.utcnow()
 
